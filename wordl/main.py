@@ -18,7 +18,7 @@ words = [
 word = random.choice(words)
 word = word.lower()
 word = [*word]
-print(word)
+
 
 
 print("Dies ist ein Wortrate Spiel")
