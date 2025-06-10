@@ -7,6 +7,7 @@ deck_player = []
 chips_player = 100
 deck_dealer = []
 
+check = None
 def deal_cards():
     for h in range(2):
         h = random.choice(cards)
@@ -16,52 +17,69 @@ def deal_cards():
         g = random.choice(cards)
         cards.remove(g)
         deck_dealer.append(g)
-    print(f'Deck Player {deck_player}')
-    print(f'Karten des Dielers: {deck_dealer}')
+    print(f'Deck Player {deck_player} --> {player_calculate(deck_player)}')
+    print(f'Karten des Dielers: {deck_dealer[0]}')
+first_run = True
+def player_calculate(list):
 
-
-def calculate(list):
     total = 0
     for card, value in list:
-        if value == 11:
+        if value == 11 and card == "Ace" and not first_run:
             inp = int(input("11 oder 1?"))
+            index = deck_player.index(("Ace", 11))
+            deck_player[index] = ("ace", inp)
             value = inp
         total += value
+    first_run = False
     return total
+def dealer_calculate(list):
+    total = 0
+    for card, value in list:
+        total += value
+    return total
+
 def play():
     print(chips_player)
     #stake = input("Wie viele chips?:")
     deal_cards()
 
-    while calculate(deck_player) <= 21 or calculate(deck_dealer) <= 16:
+    while player_calculate(deck_player) <= 21 or dealer_calculate(deck_dealer) <= 16:
         anwser = input("noch eine Karte austeilen? y/n")
         if anwser == "y":
             card = random.choice(cards)
             cards.remove(card)
             deck_player.append(card)
             print(f'Deck Player {deck_player}')
-            if calculate(deck_player) > 21:
+            if player_calculate(deck_player) > 21:
                 print("Der Dealer hat gewonnen!")
                 break
         else:
-            while calculate(deck_player) <= 21 or calculate(deck_dealer) <= 16:
-                if calculate(deck_dealer) < 16:
+            while player_calculate(deck_player) <= 21 or dealer_calculate(deck_dealer) <= 16:
+                if dealer_calculate(deck_dealer) < 16:
                     card = random.choice(cards)
                     cards.remove(card)
                     deck_dealer.append(card)
-                    print(f'Deck Dealer: {deck_dealer}')
-                    if calculate(deck_dealer) > 21:
+                    print(f'Deck Dealer: {deck_dealer} --> {dealer_calculate(deck_dealer)}')
+                    if dealer_calculate(deck_dealer) > 21:
                         print("Du hast gewonnen!")
+                        print(f'Deck Player {deck_player} --> {player_calculate(deck_player)}')
+                        print(f'Deck Dealer {deck_dealer} --> {dealer_calculate(deck_dealer)}')
                         break
                 else:
-                    if calculate(deck_dealer) > calculate(deck_player):
+                    if dealer_calculate(deck_dealer) > player_calculate(deck_player):
                         print("Der Dealer hat Gewonnen!")
+                        print(f'Deck Player {deck_player} --> {player_calculate(deck_player)}')
+                        print(f'Deck Dealer {deck_dealer} --> {dealer_calculate(deck_dealer)}')
                         break
-                    elif calculate(deck_dealer) == calculate(deck_player):
+                    elif dealer_calculate(deck_dealer) == player_calculate(deck_player):
                         print("Gleichstand")
+                        print(f'Deck Player {deck_player} --> {player_calculate(deck_player)}')
+                        print(f'Deck Dealer {deck_dealer} --> {dealer_calculate(deck_dealer)}')
                         break
                     else:
                         print("Du hast gewonnen!")
+                        print(f'Deck Player {deck_player} --> {player_calculate(deck_player)}')
+                        print(f'Deck Dealer {deck_dealer} --> {dealer_calculate(deck_dealer)}')
                         break
             break
 
@@ -75,6 +93,8 @@ def new_Game():
 
 def main():
     while input("Spielen?y/n") != "n":
+        global check
+        check = 0
         play()
         new_Game()
 
