@@ -1,16 +1,53 @@
 import random
 import string
 import time
+import requests
 
 
 def random_letter():
     return random.choice(string.ascii_uppercase)
 
 
-def score_entry(entry, letter):
-    if entry.strip() == "":
+def check_place_exists(place, type_filter):
+    if not place.strip():
+        return False
+
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        'q': place,
+        'format': 'json',
+        'limit': 1,
+        'addressdetails': 1
+    }
+
+    headers = {
+        'User-Agent': 'CityCountryRiverGame/1.0'
+    }
+
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        if not data:
+            return False
+
+        address = data[0].get('address', {})
+        if type_filter == "city":
+            return 'city' in address or 'town' in address
+        elif type_filter == "country":
+            return 'country' in address
+        elif type_filter == "river":
+            return 'river' in address or 'waterway' in address or 'natural' in address
+        else:
+            return False
+    except:
+        return False
+
+
+def score_entry(entry, letter, type_filter):
+    if not entry.upper().startswith(letter):
         return 0
-    return 10 if entry.upper().startswith(letter) else 0
+    return 10 if check_place_exists(entry, type_filter) else 0
 
 
 def play_round():
@@ -25,37 +62,35 @@ def play_round():
     river = input("River: ")
 
     end_time = time.time()
-    time_taken = end_time - start_time
-
-    if time_taken > 30:
-        print("Time is up.")
+    if end_time - start_time > 30:
+        print("Time's up! No points this round.")
         return 0
 
-    total_score = 0
-    total_score += score_entry(city, letter)
-    total_score += score_entry(country, letter)
-    total_score += score_entry(river, letter)
+    score = 0
+    city_score = score_entry(city, letter, "city")
+    country_score = score_entry(country, letter, "country")
+    river_score = score_entry(river, letter, "river")
+
+    score += city_score + country_score + river_score
 
     print("\n--- Scoring ---")
-    print(f"City: {city} ({score_entry(city, letter)} points)")
-    print(f"Country: {country} ({score_entry(country, letter)} points)")
-    print(f"River: {river} ({score_entry(river, letter)} points)")
-    print(f"Total points this round: {total_score}")
+    print(f"City: {city} ({city_score} points)")
+    print(f"Country: {country} ({country_score} points)")
+    print(f"River: {river} ({river_score} points)")
+    print(f"Total this round: {score}")
 
-    return total_score
+    return score
 
 
 def start_game():
-    print("Welcome to City, Country, River!")
-    total_points = 0
-
+    print("🎮 Welcome to City, Country, River with Online Validation!")
+    total = 0
     while True:
-        total_points += play_round()
-        again = input("\nDo you want to play another round? (y/n): ").lower()
+        total += play_round()
+        again = input("\nPlay another round? (y/n): ").lower()
         if again != 'y':
             break
-
-    print(f"\nGame Over. Your total score: {total_points} points.")
+    print(f"\nGame over. Final score: {total}")
 
 
 if __name__ == "__main__":
